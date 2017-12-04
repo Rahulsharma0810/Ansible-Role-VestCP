@@ -1,0 +1,90 @@
+- block:
+  - file:
+      path: /etc/yum.repos.d/CentOS-Vault.repo
+      state: absent
+
+  - name: CENTOS-VAULT REPO FIX
+    copy:
+      src: templates/Centos-Vault.j2
+      dest: "/etc/yum.repos.d/CentOS-Vault.repo"
+
+  - name: UPGRADE ALL PACKAGES
+    yum:
+      name: '*'
+      state: latest
+
+  - stat:
+      path: /etc/init.d/vesta
+    register: vesta_installed
+
+  - name: DOWNLOADING VESTACP SCRIPT
+    get_url: url=http://vestacp.com/pub/vst-install.sh dest=/tmp mode=0720
+    when: vesta_installed.stat.islnk is not defined
+
+  - name: RUN THE INSTALLER
+    shell: >
+            yes | bash /tmp/vst-install.sh --nginx yes --phpfpm yes --apache no
+            --vsftpd yes --proftpd no --exim yes --dovecot yes --spamassassin no
+            --clamav yes --named yes --iptables no --fail2ban yes --mysql yes
+            --postgresql no --remi yes --quota no
+            --hostname {{ inventory_hostname }}
+            --email {{ vesta_email }}
+            --password {{ vesta_password }}
+    args:
+      creates: /root/.vestainstalled
+    when: vesta_installed.stat.islnk is not defined
+
+  - name: STOPING PHP-FPM
+    service:
+      name: php-fpm
+      state: stopped
+    ignore_errors: yes
+
+  - name: REMOVE OLD PHP
+    yum:
+      name: php
+      state: absent
+
+  - name: REMOVE OLD PHP LINK
+    file:
+      state: absent
+      path: /usr/bin/php
+    ignore_errors: yes
+
+  - name: INSTALLING PHP 7.2 WITH DEPENDENCIES
+    yum: state=latest name={{ item }}
+    with_items:
+      - "{{ PHP_Packages }}"
+
+  - file:
+      src: /usr/bin/php72
+      dest: /usr/bin/php
+      state: link
+
+  - name: SETTING PHP-FPM
+    lineinfile:
+      dest: /etc/opt/remi/php72/php-fpm.conf
+      regexp: '^(.*)include=(.*)$'
+      line: 'include=/etc/php-fpm.d/*.conf'
+      backrefs: yes
+
+  - name: STARTING PHP-FPM
+    service:
+      name: php72-php-fpm
+      state: started
+      enabled: yes
+
+  - name: REMOVE OLD PHP-FPM /usr/lib/
+    file:
+      state: absent
+      path: /usr/lib/systemd/system/php-fpm.service
+
+  - file:
+      src: /usr/lib/systemd/system/php72-php-fpm.service
+      dest: /usr/lib/systemd/system/php-fpm.service
+      state: link
+
+  - name: RELOAD SYSTEMD
+    command: systemctl daemon-reload
+    notify: restart nginx
+  become: true

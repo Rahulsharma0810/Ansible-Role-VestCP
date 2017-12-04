@@ -1,0 +1,30 @@
+# <!--===============================
+# =          VestaCP Role           =
+# ================================-->
+PHP_Packages:
+  - php72-php
+  - php72-php-pear
+  - php72-php-bcmath
+  - php72-php-pecl-jsond-devel
+  - php72-php-mysqlnd
+  - php72-php-gd
+  - php72-php-common
+  - php72-php-fpm
+  - php72-php-intl
+  - php72-php-cli
+  - php72-php
+  - php72-php-xml
+  - php72-php-opcache
+  - php72-php-pecl-apcu
+  - php72-php-pecl-jsond
+  - php72-php-pdo
+  - php72-php-gmp
+  - php72-php-process
+  - php72-php-pecl-imagick
+  - php72-php-devel
+  - php72-php-mbstring
+  - php72-php-pecl-zip.x86_64
+
+vesta_email: you@email.com
+vesta_password: Password
+# <!--==  End of VESTACP Role  ==-->

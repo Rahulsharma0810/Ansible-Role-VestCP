@@ -1,0 +1,14 @@
+---
+galaxy_info:
+  author: Rahul Sharma
+  description: Install Vesta control Panel on Centos.
+  license: MIT
+  min_ansible_version: 1.2
+
+  platforms:
+    - name: EL
+      versions:
+        - 7
+  categories:
+  - system
+dependencies: [Ansible-Role-Remi]
